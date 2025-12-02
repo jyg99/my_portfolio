@@ -1,16 +1,31 @@
-# React + Vite
+# Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite + Three.js로 만든 포트폴리오 웹사이트입니다.
 
-Currently, two official plugins are available:
+**배포 주소**: https://jyg99.github.io/my_portfolio/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 기술 스택
 
-## React Compiler
+- React 19
+- Vite 7
+- Three.js
+- React Three Fiber
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 프로젝트
 
-## Expanding the ESLint configuration
+- **빌려joying**: P2P 렌탈 플랫폼 (React, Spring Boot, Python, LangChain)
+- **절약몬**: 게임화 절약 앱 (Unity, Spring Boot, Python, Firebase)
+- **stretch!**: 동작인식 스트래칭 프로그램 (Vue.js, Electron, MediaPipe, PyTorch)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 실행 방법
+
+```bash
+npm install
+npm run dev
+```
+
+빌드: `npm run build`
+
+## 배포
+
+GitHub Pages로 자동 배포됩니다. `main` 브랜치에 푸시하면 자동으로 빌드 및 배포됩니다.
