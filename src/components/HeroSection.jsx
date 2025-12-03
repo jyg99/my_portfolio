@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Header from './Header';
-import { ChevronDown, Linkedin } from 'lucide-react';
+import { ChevronDown, Github } from 'lucide-react';
 
 const HeroSection = () => {
   const canvasRef = useRef(null);
@@ -18,8 +18,8 @@ const HeroSection = () => {
     }
   };
 
-  const openLinkedIn = () => {
-    window.open('https://www.linkedin.com/in/your-profile', '_blank');
+  const openGitHub = () => {
+    window.open('https://github.com/jyg99', '_blank');
   };
 
   // hoveredText가 변경될 때 ref도 업데이트
@@ -353,13 +353,13 @@ const HeroSection = () => {
               포트폴리오
             </button>
             <button 
-              className="nav-button linkedin" 
-              onClick={openLinkedIn}
-              onMouseEnter={() => setHoveredText('LINKED')}
+              className="nav-button github" 
+              onClick={openGitHub}
+              onMouseEnter={() => setHoveredText('GITHUB')}
               onMouseLeave={() => setHoveredText('')}
             >
-              <Linkedin size={20} />
-              링크드인
+              <Github size={20} />
+              깃허브
             </button>
           </div>
         </div>
@@ -501,6 +501,133 @@ const HeroSection = () => {
           }
           60% {
             transform: translateX(-50%) translateY(-5px);
+          }
+        }
+        
+        /* 태블릿 */
+        @media (max-width: 992px) {
+          .particles-canvas {
+            display: none;
+          }
+          .button-container {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+          }
+          .nav-button {
+            width: 160px;
+            min-width: 160px;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+          }
+          .frame {
+            width: 400px;
+            height: 300px;
+            padding: 2.5rem;
+            position: relative;
+            z-index: 1;
+          }
+          .text-top {
+            font-size: 2.8rem;
+            margin-left: -4rem;
+            margin-top: 1rem;
+            transform: translateX(-25px);
+            position: relative;
+            z-index: 2;
+          }
+          .intro-text {
+            font-size: 1.3rem;
+            margin-top: 3.5rem;
+            position: relative;
+            z-index: 2;
+          }
+          .intro-text .name {
+            font-size: 1.7rem;
+          }
+        }
+        
+        /* 모바일 */
+        @media (max-width: 768px) {
+          .particles-canvas {
+            display: none;
+          }
+          .frame-wrapper {
+            gap: 1.5rem;
+            padding: 0 1rem;
+          }
+          .button-container {
+            flex-direction: column;
+            width: 100%;
+            max-width: 280px;
+            gap: 0.8rem;
+          }
+          .nav-button {
+            width: 100%;
+            min-width: unset;
+            padding: 1rem 1.5rem;
+            font-size: 0.95rem;
+          }
+          .frame {
+            width: 100%;
+            max-width: 320px;
+            height: auto;
+            min-height: 250px;
+            padding: 2rem;
+            z-index: 1;
+          }
+          .frame::after {
+            top: 2rem;
+            height: 5rem;
+          }
+          .text-top {
+            font-size: 2rem;
+            margin-left: -2.5rem;
+            margin-top: 1rem;
+            transform: translateX(-15px);
+            position: relative;
+            z-index: 2;
+          }
+          .intro-text {
+            font-size: 1.1rem;
+            margin-top: 2.5rem;
+          }
+          .intro-text .name {
+            font-size: 1.4rem;
+          }
+          .scroll-hint {
+            bottom: 5rem;
+          }
+        }
+        
+        /* 작은 모바일 */
+        @media (max-width: 480px) {
+          .frame {
+            max-width: 280px;
+            min-height: 220px;
+            padding: 1.5rem;
+            z-index: 1;
+          }
+          .text-top {
+            font-size: 1.6rem;
+            margin-left: -1.5rem;
+            margin-top: 1rem;
+            transform: translateX(-30px);
+            position: relative;
+            z-index: 2;
+          }
+          .intro-text {
+            font-size: 1rem;
+            margin-top: 2rem;
+          }
+          .intro-text .name {
+            font-size: 1.2rem;
+          }
+          .nav-button {
+            padding: 0.9rem 1.2rem;
+            font-size: 0.9rem;
+          }
+          .scroll-hint {
+            bottom: 5rem;
           }
         }
       `}</style>

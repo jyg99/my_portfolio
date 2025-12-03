@@ -1,9 +1,99 @@
-import React from 'react';
+import React, { useState, useRef, Suspense, useMemo, useEffect } from 'react';
 import { Github, ExternalLink } from 'lucide-react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { useGLTF, OrbitControls } from '@react-three/drei';
+import * as THREE from 'three';
 
 import jygImage from '../assets/jyg.JPG';
+import rockModel from '../assets/rock/xjijbgx_tier_3.gltf?url';
+import sketchTexture from '../assets/rock/Textures/T_xjijbgx_1K_A.png';
+
+// 3D Rock 모델 컴포넌트 - 스케치 스타일 + 캐러셀 연동
+function RockModel({ activeSlide, prevSlide }) {
+  const { scene } = useGLTF(rockModel);
+  const meshRef = useRef();
+  const targetRotation = useRef(0);
+  const currentRotation = useRef(0);
+
+  // 슬라이드 변경 시 회전 방향 결정
+  useEffect(() => {
+    if (prevSlide !== activeSlide) {
+      // 오른쪽으로 이동 (다음 슬라이드) → 반시계 방향 회전
+      // 왼쪽으로 이동 (이전 슬라이드) → 시계 방향 회전
+      const direction = activeSlide > prevSlide ? -1 : 1;
+      targetRotation.current += Math.PI * 2 * direction; // 360도 회전
+    }
+  }, [activeSlide, prevSlide]);
+
+  // 스케치 텍스처 적용
+  const sketchScene = useMemo(() => {
+    const clonedScene = scene.clone();
+    
+    // 텍스처 로더
+    const textureLoader = new THREE.TextureLoader();
+    const map = textureLoader.load(sketchTexture);
+    map.colorSpace = THREE.SRGBColorSpace;
+    
+    clonedScene.traverse((child) => {
+      if (child.isMesh) {
+        // 스케치 텍스처 그대로 표시
+        const material = new THREE.MeshBasicMaterial({
+          map: map,
+        });
+        child.material = material;
+      }
+    });
+    
+    return clonedScene;
+  }, [scene]);
+
+  useFrame(() => {
+    if (meshRef.current) {
+      // 목표 회전값으로 부드럽게 보간
+      currentRotation.current += (targetRotation.current - currentRotation.current) * 0.08;
+      meshRef.current.rotation.y = currentRotation.current;
+    }
+  });
+
+  return (
+    <primitive 
+      ref={meshRef}
+      object={sketchScene} 
+      scale={1.2}
+      position={[0, -1, 0]}
+    />
+  );
+}
 
 const AboutSection = () => {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [prevSlide, setPrevSlide] = useState(0);
+  const carouselRef = useRef(null);
+  const totalSlides = 4; // 개인정보, 학력, 경력, 활동
+
+  const handleScroll = () => {
+    if (carouselRef.current) {
+      const scrollLeft = carouselRef.current.scrollLeft;
+      const slideWidth = carouselRef.current.offsetWidth;
+      const currentSlide = Math.round(scrollLeft / slideWidth);
+      if (currentSlide !== activeSlide) {
+        setPrevSlide(activeSlide);
+        setActiveSlide(currentSlide);
+      }
+    }
+  };
+
+  const goToSlide = (index) => {
+    if (carouselRef.current) {
+      setPrevSlide(activeSlide);
+      const slideWidth = carouselRef.current.offsetWidth;
+      carouselRef.current.scrollTo({
+        left: slideWidth * index,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <section id="about" className="about-section">
       <div className="about-container">
@@ -23,7 +113,9 @@ const AboutSection = () => {
             <div className="right-column">
               <div className="bio-section">
                 <p className="highlight">
-                  사용자에게 즐거움을 주는 웹 경험을 만드는 것을 목표로 합니다.
+                  사용자에게 즐거움을 주는<br />
+                  웹 경험을 만드는 것을<br />
+                  목표로 합니다.
                 </p>
                 <p className="bio-text">
                   안녕하세요, 프론트엔드 개발자 정용균입니다.
@@ -39,8 +131,30 @@ const AboutSection = () => {
             </div>
           </div>
 
+          {/* 3D Rock 오브젝트 */}
+          <div className="rock-container">
+            <Canvas
+              camera={{ position: [0, 0, 4], fov: 45 }}
+              style={{ background: 'transparent' }}
+              className="rock-canvas"
+            >
+              <ambientLight intensity={0.8} />
+              <directionalLight position={[5, 5, 5]} intensity={1.2} />
+              <directionalLight position={[-3, 3, -3]} intensity={0.6} />
+              <Suspense fallback={null}>
+                <RockModel activeSlide={activeSlide} prevSlide={prevSlide} />
+              </Suspense>
+              <OrbitControls 
+                enableZoom={false} 
+                enablePan={false}
+                enableRotate={false}
+              />
+            </Canvas>
+          </div>
+
           {/* 하단: 개인정보 + 학력 + 경력 + 활동 */}
-          <div className="bottom-section">
+          <div className="carousel-wrapper">
+            <div className="bottom-section" ref={carouselRef} onScroll={handleScroll}>
             {/* 개인 정보 */}
             <div className="info-section">
               <h3 className="section-subtitle">개인 정보</h3>
@@ -109,6 +223,18 @@ const AboutSection = () => {
 
               </div>
             </div>
+            </div>
+            {/* 캐러셀 인디케이터 */}
+            <div className="carousel-indicators">
+              {[...Array(totalSlides)].map((_, index) => (
+                <button
+                  key={index}
+                  className={`indicator ${activeSlide === index ? 'active' : ''}`}
+                  onClick={() => goToSlide(index)}
+                  aria-label={`슬라이드 ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -141,6 +267,14 @@ const AboutSection = () => {
           flex-direction: column;
           gap: 3rem;
           width: 100%;
+        }
+        .rock-container {
+          width: 100%;
+          height: 200px;
+          display: none;
+        }
+        .rock-canvas {
+          /* 필터 없음 - 텍스처 원본 그대로 */
         }
         .top-section {
           display: grid;
@@ -466,21 +600,188 @@ const AboutSection = () => {
         }
         /* 모바일 */
         @media (max-width: 640px) {
+          .about-section {
+            display: block !important;
+            height: 100vh;
+            padding: 0 !important;
+            overflow: hidden;
+          }
           .about-container {
-            padding: 1.5rem 1rem;
+            padding: 1rem;
+            padding-top: 5rem;
+            padding-bottom: 5rem;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
           }
           .about-layout {
-            gap: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 0;
+            min-height: 0;
+          }
+          .rock-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 80px;
+            flex: 1;
+            min-height: 0;
           }
           .top-section {
-            gap: 1.5rem;
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            grid-template-rows: auto auto;
+            gap: 0.8rem;
+            align-items: start;
+            flex-shrink: 0;
           }
-          .bottom-section {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
+          .left-column {
+            grid-column: 1;
+            grid-row: 1;
+          }
+          .right-column {
+            display: contents;
+          }
+          .bio-section {
+            display: contents;
+          }
+          .highlight {
+            grid-column: 2;
+            grid-row: 1;
+            font-size: 1rem;
+            text-align: left;
+            margin-bottom: 0;
+            align-self: center;
+            line-height: 1.4;
+            font-weight: 700;
+          }
+          .bio-text {
+            grid-column: 1 / -1;
+            grid-row: 2;
+            font-size: 0.8rem;
+            text-align: left;
+            line-height: 1.5;
+            margin-top: 0.3rem;
           }
           .image-frame {
-            max-width: 200px;
+            max-width: 100px;
+          }
+          .carousel-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex-shrink: 0;
+            margin-top: 0.5rem;
+          }
+          .bottom-section {
+            display: flex;
+            flex-direction: row;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 0;
+            padding-bottom: 0;
+            margin: 0;
+            -webkit-overflow-scrolling: touch;
+          }
+          .bottom-section::-webkit-scrollbar {
+            display: none;
+          }
+          .info-section,
+          .content-section {
+            flex: 0 0 100%;
+            min-width: 100%;
+            scroll-snap-align: start;
+            background: var(--bg-color);
+            padding: 1.5rem 1rem;
+            border: none;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            border-radius: 0;
+            box-sizing: border-box;
+          }
+          .carousel-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+          }
+          .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+          }
+          .indicator.active {
+            background: var(--text-color);
+            transform: scale(1.3);
+          }
+          .section-subtitle {
+            font-size: 0.95rem;
+          }
+          .info-label,
+          .info-value,
+          .entry-date,
+          .entry-content {
+            font-size: 0.8rem;
+          }
+        }
+        
+        /* 작은 모바일 */
+        @media (max-width: 480px) {
+          .about-container {
+            padding: 0.8rem;
+            padding-top: 4.5rem;
+            padding-bottom: 5rem;
+          }
+          .rock-container {
+            min-height: 60px;
+          }
+          .top-section {
+            grid-template-columns: 90px 1fr;
+            gap: 0.6rem;
+          }
+          .image-frame {
+            max-width: 90px;
+          }
+          .highlight {
+            font-size: 0.95rem;
+            line-height: 1.35;
+          }
+          .bio-text {
+            font-size: 0.75rem;
+            line-height: 1.45;
+          }
+          .bottom-section {
+            margin: 0;
+          }
+          .info-section,
+          .content-section {
+            flex: 0 0 100%;
+            min-width: 100%;
+            padding: 1rem 0.8rem;
+          }
+          .info-row {
+            flex-direction: column;
+            gap: 0.2rem;
+          }
+          .info-value {
+            text-align: left;
+          }
+          .section-subtitle {
+            font-size: 0.85rem;
+          }
+          .info-label,
+          .info-value,
+          .entry-date,
+          .entry-content {
+            font-size: 0.75rem;
           }
         }
       `}</style>

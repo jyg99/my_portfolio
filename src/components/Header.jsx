@@ -60,6 +60,34 @@ const Header = () => {
         .nav-links li:hover::after {
           width: 100%;
         }
+        /* 태블릿 */
+        @media (max-width: 992px) {
+          .header-nav {
+            padding: 1.5rem 2rem;
+          }
+          .logo {
+            font-size: 1.3rem;
+          }
+          .nav-links {
+            gap: 1.5rem;
+          }
+          .nav-links li {
+            font-size: 0.85rem;
+          }
+        }
+        /* 모바일 */
+        @media (max-width: 768px) {
+          .header-nav {
+            padding: 1rem 1rem;
+            justify-content: flex-start;
+          }
+          .logo {
+            font-size: 1.1rem;
+          }
+          .nav-links {
+            display: none;
+          }
+        }
       `}</style>
         </nav>
     );

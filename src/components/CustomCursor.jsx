@@ -24,14 +24,17 @@ const CustomCursor = () => {
         element.classList.contains('link-button') ||
         element.classList.contains('link-item') ||
         element.classList.contains('logo') ||
-        element.classList.contains('nav-links')
+        element.classList.contains('nav-links') ||
+        element.classList.contains('bento-item') ||
+        element.classList.contains('project-card') ||
+        element.classList.contains('link-btn')
       )) {
         return true;
       }
       
       // closest 체크
       if (element.closest) {
-        const closest = element.closest('button, a, .nav-button, .link-button, .link-item, .nav-links li, .logo');
+        const closest = element.closest('button, a, .nav-button, .link-button, .link-item, .nav-links li, .logo, .bento-item, .project-card, .link-btn');
         if (closest) return true;
       }
       
@@ -130,7 +133,7 @@ const CustomCursor = () => {
           height: 3px;
           background-color: var(--text-color);
           border-radius: 50%;
-          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
         }
         /* 텍스트 선택 시 기본 커서 표시 */
         *::selection {
@@ -138,6 +141,15 @@ const CustomCursor = () => {
         }
         input, textarea {
           cursor: text !important;
+        }
+        /* 태블릿/모바일에서 커스텀 커서 숨기기 */
+        @media (max-width: 992px) {
+          * {
+            cursor: auto !important;
+          }
+          .custom-cursor {
+            display: none !important;
+          }
         }
       `}</style>
     </>

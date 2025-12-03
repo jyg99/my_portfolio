@@ -1,14 +1,65 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // 기술 스택 로고 매핑
 const techLogos = {
+    // Core
     'JavaScript': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg',
     'React': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg',
     'Vue': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg',
     'Three.js': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/threejs/threejs-original.svg',
+    // Frontend
+    'HTML/CSS': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg',
+    'TypeScript': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg',
+    'React Query': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg',
+    'Zustand': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg',
+    'Pinia': 'https://pinia.vuejs.org/logo.svg',
+    'Axios': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/axios/axios-plain.svg',
+    // Backend
+    'Python': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg',
+    'FastAPI': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/fastapi/fastapi-original.svg',
+    'MySQL': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg',
+    'Django': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/django/django-plain.svg',
+    // Tools
+    'Git': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg',
+    'Docker': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg',
+    'Jenkins': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jenkins/jenkins-original.svg',
+    'GitLab': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/gitlab/gitlab-original.svg',
+    'Notion': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/notion/notion-original.svg',
+    'Discord': 'https://cdn.simpleicons.org/discord/5865F2',
+    'Jira': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jira/jira-original.svg',
+    'Figma': 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg',
 };
 
 const TechStackSection = () => {
+    const sectionRef = useRef(null);
+    const [isVisible, setIsVisible] = useState(false);
+    const [animationKey, setAnimationKey] = useState(0);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    // 진입 시 먼저 리셋하고 약간의 딜레이 후 애니메이션 시작
+                    setIsVisible(false);
+                    setAnimationKey(prev => prev + 1);
+                    // 짧은 딜레이 후 애니메이션 시작
+                    setTimeout(() => {
+                        setIsVisible(true);
+                    }, 50);
+                } else {
+                    setIsVisible(false);
+                }
+            },
+            { threshold: 0.1, rootMargin: '-50px' }
+        );
+
+        if (sectionRef.current) {
+            observer.observe(sectionRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
+
     const coreStack = [
         { name: 'JavaScript', percentage: 70 },
         { name: 'React', percentage: 60 },
@@ -26,12 +77,10 @@ const TechStackSection = () => {
     ];
 
     const backendStack = [
-        'Java',
-        'Spring Boot',
         'Python',
         'FastAPI',
         'MySQL',
-        'Redis',
+        'Django',
     ];
 
     const toolsStack = [
@@ -40,11 +89,13 @@ const TechStackSection = () => {
         'Jenkins',
         'GitLab',
         'Notion',
-        'Slack',
+        'Discord',
+        'Jira',
+        'Figma',
     ];
 
     return (
-        <section id="tech" className="tech-section">
+        <section id="tech" className="tech-section" ref={sectionRef}>
             <h2 className="section-title">TECH STACK</h2>
 
             <div className="core-stack-grid">
@@ -63,8 +114,12 @@ const TechStackSection = () => {
                             </div>
                             <div className="progress-container">
                                 <div 
+                                    key={`${tech.name}-${animationKey}`}
                                     className="progress-bar"
-                                    style={{ width: `${tech.percentage}%` }}
+                                    style={{ 
+                                        width: isVisible ? `${tech.percentage}%` : '0%',
+                                        transitionDelay: `${index * 0.15}s`
+                                    }}
                                 />
                             </div>
                         </div>
@@ -77,7 +132,12 @@ const TechStackSection = () => {
                     <h3 className="category-title">Frontend</h3>
                     <div className="tags">
                         {frontendStack.map((tech) => (
-                            <span key={tech} className="tag">{tech}</span>
+                            <span key={tech} className="tag">
+                                {techLogos[tech] && (
+                                    <img src={techLogos[tech]} alt={tech} className="tag-logo" />
+                                )}
+                                {tech}
+                            </span>
                         ))}
                     </div>
                 </div>
@@ -86,7 +146,12 @@ const TechStackSection = () => {
                     <h3 className="category-title">Backend</h3>
                     <div className="tags">
                         {backendStack.map((tech) => (
-                            <span key={tech} className="tag">{tech}</span>
+                            <span key={tech} className="tag">
+                                {techLogos[tech] && (
+                                    <img src={techLogos[tech]} alt={tech} className="tag-logo" />
+                                )}
+                                {tech}
+                            </span>
                         ))}
                     </div>
                 </div>
@@ -95,7 +160,12 @@ const TechStackSection = () => {
                     <h3 className="category-title">Tools</h3>
                     <div className="tags">
                         {toolsStack.map((tech) => (
-                            <span key={tech} className="tag">{tech}</span>
+                            <span key={tech} className="tag">
+                                {techLogos[tech] && (
+                                    <img src={techLogos[tech]} alt={tech} className="tag-logo" />
+                                )}
+                                {tech}
+                            </span>
                         ))}
                     </div>
                 </div>
@@ -182,12 +252,7 @@ const TechStackSection = () => {
           height: 100%;
           background-color: var(--text-color);
           transition: width 1s ease-out;
-          animation: fillProgress 1.5s ease-out forwards;
-        }
-        @keyframes fillProgress {
-          from {
-            width: 0%;
-          }
+          width: 0%;
         }
         .stack-categories {
           display: grid;
@@ -223,27 +288,120 @@ const TechStackSection = () => {
           color: var(--text-color);
           transition: all 0.2s ease;
           background-color: transparent;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
         }
         .tag:hover {
           background: var(--text-color);
           color: var(--bg-color);
         }
+        .tag:hover .tag-logo {
+          filter: brightness(0) invert(1);
+        }
+        .tag-logo {
+          width: 18px;
+          height: 18px;
+          object-fit: contain;
+          transition: filter 0.2s ease;
+        }
         @media (max-width: 992px) {
+          .tech-section {
+            padding: 3rem 1.5rem;
+          }
+          .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+          }
           .core-stack-grid {
             grid-template-columns: repeat(2, 1fr);
             gap: 1.5rem;
           }
           .stack-categories {
             grid-template-columns: 1fr;
-            gap: 3rem;
+            gap: 2.5rem;
           }
         }
         @media (max-width: 768px) {
-          .core-stack-grid {
-            grid-template-columns: 1fr;
+          .tech-section {
+            padding: 3rem 1rem;
+            padding-bottom: 5rem;
+            min-height: 100vh;
           }
           .section-title {
             font-size: 2rem;
+            margin-bottom: 2.5rem;
+            letter-spacing: 0.1em;
+          }
+          .core-stack-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 3rem;
+          }
+          .core-stack-item {
+            padding: 1rem;
+          }
+          .stack-logo {
+            width: 32px;
+            height: 32px;
+          }
+          .stack-name {
+            font-size: 1rem;
+          }
+          .stack-percentage {
+            font-size: 0.8rem;
+          }
+          .category-title {
+            font-size: 1.3rem;
+          }
+          .tags {
+            gap: 0.5rem;
+          }
+          .tag {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+          }
+          .tag-logo {
+            width: 14px;
+            height: 14px;
+          }
+        }
+        @media (max-width: 480px) {
+          .tech-section {
+            padding: 2.5rem 0.8rem;
+            padding-bottom: 5rem;
+          }
+          .section-title {
+            font-size: 1.6rem;
+            margin-bottom: 2rem;
+          }
+          .core-stack-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.6rem;
+          }
+          .core-stack-item {
+            padding: 0.8rem;
+          }
+          .stack-logo {
+            width: 24px;
+            height: 24px;
+          }
+          .stack-name {
+            font-size: 0.85rem;
+          }
+          .stack-percentage {
+            font-size: 0.7rem;
+          }
+          .stack-categories {
+            gap: 2rem;
+          }
+          .category-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+          }
+          .tag {
+            padding: 0.35rem 0.7rem;
+            font-size: 0.75rem;
           }
         }
       `}</style>

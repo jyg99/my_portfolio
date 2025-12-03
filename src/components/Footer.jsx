@@ -4,12 +4,7 @@ const Footer = () => {
     return (
         <footer className="footer">
             <div className="footer-content">
-                <p>&copy; 2025 Portfolio Architect. All rights reserved.</p>
-                <div className="social-links">
-                    <a href="#">GitHub</a>
-                    <a href="#">LinkedIn</a>
-                    <a href="#">Email</a>
-                </div>
+                <p>&copy; 2025 gyun's Portfolio. All rights reserved.</p>
             </div>
             <style>{`
         .footer {
@@ -17,27 +12,34 @@ const Footer = () => {
           color: var(--bg-color);
           padding: 2rem;
           text-align: center;
-          scroll-snap-align: start; /* Optional: if we want footer to snap */
+          scroll-snap-align: start;
         }
         .footer-content {
           display: flex;
           flex-direction: column;
-          gap: 1rem;
           align-items: center;
         }
-        .social-links {
-          display: flex;
-          gap: 2rem;
+        .footer-content p {
+          font-family: var(--font-main);
+          font-size: 0.9rem;
         }
-        .social-links a {
-          color: var(--bg-color);
-          text-decoration: none;
-          font-family: var(--font-display);
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
+        @media (max-width: 768px) {
+          .footer {
+            padding: 1.5rem 1rem;
+            padding-bottom: 4rem;
+          }
+          .footer-content p {
+            font-size: 0.85rem;
+          }
         }
-        .social-links a:hover {
-          text-decoration: underline;
+        @media (max-width: 480px) {
+          .footer {
+            padding: 1rem 0.8rem;
+            padding-bottom: 4rem;
+          }
+          .footer-content p {
+            font-size: 0.75rem;
+          }
         }
       `}</style>
         </footer>

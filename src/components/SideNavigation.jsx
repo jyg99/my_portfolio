@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import RockCanvas from './RockModel';
 
 const SideNavigation = () => {
     const [activeSection, setActiveSection] = useState('hero');
+    const [prevSection, setPrevSection] = useState('hero');
+    const [sectionIndex, setSectionIndex] = useState(0);
+    const [prevSectionIndex, setPrevSectionIndex] = useState(0);
 
     const sections = [
         { id: 'hero', label: 'Home' },
         { id: 'about', label: 'About' },
         { id: 'tech', label: 'Tech' },
         { id: 'projects', label: 'Projects' },
+        { id: 'contact', label: 'Contact' },
     ];
 
     const scrollToSection = (id) => {
@@ -25,7 +30,16 @@ const SideNavigation = () => {
                     .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
                 
                 if (visibleSections.length > 0) {
-                    setActiveSection(visibleSections[0].target.id);
+                    const newSection = visibleSections[0].target.id;
+                    if (newSection !== activeSection) {
+                        setPrevSection(activeSection);
+                        setActiveSection(newSection);
+                        
+                        // 인덱스 업데이트
+                        const newIndex = sections.findIndex(s => s.id === newSection);
+                        setPrevSectionIndex(sectionIndex);
+                        setSectionIndex(newIndex);
+                    }
                 }
             },
             { threshold: 0.5 }
@@ -37,10 +51,17 @@ const SideNavigation = () => {
         });
 
         return () => observer.disconnect();
-    }, []);
+    }, [activeSection, sectionIndex]);
 
     return (
         <nav className="side-nav">
+            {/* PC용 3D Rock 오브젝트 */}
+            <div className="rock-wrapper">
+                <RockCanvas 
+                    activeIndex={sectionIndex} 
+                    prevIndex={prevSectionIndex}
+                />
+            </div>
             <ul>
                 {sections.map(({ id, label }) => (
                     <li key={id} className={activeSection === id ? 'active' : ''}>
@@ -58,6 +79,15 @@ const SideNavigation = () => {
           top: 50%;
           transform: translateY(-50%);
           z-index: 100;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
+        .rock-wrapper {
+          width: 80px;
+          height: 80px;
+          margin-bottom: 0.5rem;
         }
         .side-nav ul {
           list-style: none;
@@ -104,9 +134,54 @@ const SideNavigation = () => {
           opacity: 1;
           transform: translateX(0);
         }
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
           .side-nav {
-            display: none; /* Hide on mobile if needed, or adjust style */
+            left: auto;
+            right: 0;
+            top: auto;
+            bottom: 0;
+            transform: none;
+            width: 100%;
+            background: var(--bg-color);
+            border-top: 1px solid var(--text-color);
+            padding: 0.5rem 0;
+            flex-direction: row;
+          }
+          .rock-wrapper {
+            display: none;
+          }
+          .side-nav ul {
+            flex-direction: row;
+            justify-content: space-around;
+            gap: 0;
+            width: 100%;
+          }
+          .side-nav button {
+            flex-direction: column;
+            gap: 0.3rem;
+            padding: 0.5rem 1rem;
+          }
+          .dot {
+            width: 6px;
+            height: 6px;
+          }
+          .label {
+            position: static;
+            opacity: 1;
+            transform: none;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+          }
+          .side-nav li.active .dot {
+            transform: scale(1.3);
+          }
+        }
+        @media (max-width: 480px) {
+          .label {
+            font-size: 0.6rem;
+          }
+          .side-nav button {
+            padding: 0.5rem 0.5rem;
           }
         }
       `}</style>
