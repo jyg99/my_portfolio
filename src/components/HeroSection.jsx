@@ -10,7 +10,6 @@ const HeroSection = () => {
   const particleCountRef = useRef(0);
   const animationFrameRef = useRef(null);
   const targetPixelsRef = useRef([]);
-  const allEdgePixelsRef = useRef([]);
 
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
@@ -76,62 +75,17 @@ const HeroSection = () => {
       const currentHoveredText = hoveredTextRef.current;
       
       if (currentHoveredText && targetPixels.length > 0) {
-        const particleCount = particles.length;
         const targetCount = targetPixels.length;
-        const allEdges = allEdgePixelsRef.current;
         
-        // 먼저 파티클들을 타겟에 배치
-        const usedTargets = new Set();
-        const unassignedParticles = [];
-        
+        // 파티클들을 타겟(글자 테두리)에 배치
+        // 모든 파티클이 동일한 패턴으로 움직이도록 순서대로 배정 (모듈러 연산)
         particles.forEach((particle, i) => {
-          if (i < targetCount) {
-            const target = targetPixels[i];
-            particle.targetX = target.x;
-            particle.targetY = target.y;
-            usedTargets.add(`${target.x},${target.y}`);
-          } else {
-            // 타겟에 배치되지 못한 파티클
-            unassignedParticles.push(particle);
-          }
+          const targetIndex = i % targetCount; // 순환하며 타겟 배정
+          const target = targetPixels[targetIndex];
+          particle.targetX = target.x;
+          particle.targetY = target.y;
+          particle.isOnText = i < targetCount; // 첫 번째 사이클만 글자에 표시
         });
-        
-        // 갈곳 잃은 파티클들을 빈 공간에 배치
-        if (unassignedParticles.length > 0 && allEdges.length > 0) {
-          // 타겟이 없는 빈 공간 찾기
-          const emptySpaces = allEdges.filter(edge => {
-            const key = `${edge.x},${edge.y}`;
-            return !usedTargets.has(key);
-          });
-          
-          // 빈 공간을 거리 순으로 정렬하여 가까운 곳부터 배치
-          unassignedParticles.forEach((particle, i) => {
-            if (i < emptySpaces.length) {
-              // 빈 공간에 직접 배치
-              particle.targetX = emptySpaces[i].x;
-              particle.targetY = emptySpaces[i].y;
-            } else {
-              // 빈 공간이 부족하면 가장 가까운 빈 공간 찾기
-              let minDist = Infinity;
-              let nearestEmpty = emptySpaces[0];
-              
-              for (const empty of emptySpaces) {
-                const dx = empty.x - particle.x;
-                const dy = empty.y - particle.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < minDist) {
-                  minDist = dist;
-                  nearestEmpty = empty;
-                }
-              }
-              
-              if (nearestEmpty) {
-                particle.targetX = nearestEmpty.x;
-                particle.targetY = nearestEmpty.y;
-              }
-            }
-          });
-        }
       } else {
         // 원래 위치 주변으로 미세하게 움직임
         particles.forEach((particle) => {
@@ -139,6 +93,7 @@ const HeroSection = () => {
           const offsetY = Math.cos(time + particle.phase * 1.3) * particle.amplitude;
           particle.targetX = particle.originalX + offsetX;
           particle.targetY = particle.originalY + offsetY;
+          particle.isOnText = false;
         });
       }
 
@@ -149,29 +104,34 @@ const HeroSection = () => {
         const distance = Math.sqrt(dx * dx + dy * dy);
         
         if (currentHoveredText && targetPixels.length > 0) {
-          // 자석처럼 빠르게 붙는 효과
+          // 모든 파티클이 동일한 속도로 이동
+          const speed = 0.3;
+          
           if (distance > 1) {
-            particle.x += dx * 0.3;
-            particle.y += dy * 0.3;
+            particle.x += dx * speed;
+            particle.y += dy * speed;
           } else {
             particle.x = particle.targetX;
             particle.y = particle.targetY;
           }
           
-          // 충돌 방지: 주변 파티클과의 거리 확인
-          const minDistance = 4; // 최소 거리
-          for (let j = 0; j < i; j++) {
-            const other = particles[j];
-            const dx2 = particle.x - other.x;
-            const dy2 = particle.y - other.y;
-            const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-            
-            if (dist2 < minDistance && dist2 > 0) {
-              // 너무 가까우면 분리
-              const angle = Math.atan2(dy2, dx2);
-              const pushDistance = (minDistance - dist2) * 0.5;
-              particle.x += Math.cos(angle) * pushDistance;
-              particle.y += Math.sin(angle) * pushDistance;
+          // 충돌 방지: 글자에 배치된 파티클끼리만 적용
+          if (particle.isOnText) {
+            const minDistance = 4;
+            for (let j = 0; j < i; j++) {
+              const other = particles[j];
+              if (!other.isOnText) continue; // 글자 외부 파티클은 제외
+              
+              const dx2 = particle.x - other.x;
+              const dy2 = particle.y - other.y;
+              const dist2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+              
+              if (dist2 < minDistance && dist2 > 0) {
+                const angle = Math.atan2(dy2, dx2);
+                const pushDistance = (minDistance - dist2) * 0.5;
+                particle.x += Math.cos(angle) * pushDistance;
+                particle.y += Math.sin(angle) * pushDistance;
+              }
             }
           }
         } else {
@@ -180,7 +140,23 @@ const HeroSection = () => {
           particle.y += dy * 0.08;
         }
         
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; // 더 검게
+        // 호버 중일 때 글자에 배치되지 않은 파티클은 이동하면서 빠르게 사라짐
+        let alpha = 0.7;
+        if (currentHoveredText && !particle.isOnText) {
+          // 원래 위치에서 현재 위치까지의 이동 비율로 투명도 계산
+          const originalDx = particle.targetX - particle.originalX;
+          const originalDy = particle.targetY - particle.originalY;
+          const totalDistance = Math.sqrt(originalDx * originalDx + originalDy * originalDy);
+          
+          const currentDx = particle.targetX - particle.x;
+          const currentDy = particle.targetY - particle.y;
+          const remainingDistance = Math.sqrt(currentDx * currentDx + currentDy * currentDy);
+          
+          // 이동 시작하자마자 빠르게 사라짐 (30% 이동하면 완전히 투명)
+          const progress = totalDistance > 0 ? 1 - (remainingDistance / totalDistance) : 1;
+          alpha = Math.max(0, 0.7 * (1 - progress * 3));
+        }
+        ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
         ctx.save();
         ctx.translate(particle.x, particle.y);
         ctx.rotate(particle.rotation);
@@ -188,19 +164,16 @@ const HeroSection = () => {
         const size = particle.radius * particle.sizeVariation;
         
         if (particle.shape === 'circle') {
-          // 원형 점 (약간 찌그러진 원)
           ctx.beginPath();
           const rx = size * (0.9 + Math.random() * 0.2);
           const ry = size * (0.9 + Math.random() * 0.2);
           ctx.ellipse(0, 0, rx, ry, Math.random() * 0.3, 0, Math.PI * 2);
           ctx.fill();
         } else if (particle.shape === 'square') {
-          // 사각형 점 (약간 회전된 사각형)
           const w = size * (1.5 + Math.random() * 0.5);
           const h = size * (1.5 + Math.random() * 0.5);
           ctx.fillRect(-w / 2, -h / 2, w, h);
         } else {
-          // 대시 형태 (짧은 선)
           const len = size * (2 + Math.random() * 1.5);
           const thick = size * (0.6 + Math.random() * 0.4);
           ctx.fillRect(-len / 2, -thick / 2, len, thick);
@@ -232,15 +205,23 @@ const HeroSection = () => {
     
     const width = canvas.width;
     const height = canvas.height;
+    const particleCount = particleCountRef.current || 5000;
     
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
     tempCanvas.width = width;
     tempCanvas.height = height;
     
+    // 화면 크기에 비례하여 글씨 크기 계산
+    // 화면의 45%를 텍스트가 차지하도록, 글자 수에 따라 조절
+    const maxTextWidth = width * 0.45;
+    const charCount = hoveredText.length;
+    // 글자당 폭을 기준으로 폰트 크기 계산
+    const fontSize = Math.min(maxTextWidth / (charCount * 0.6), height * 0.3);
+    
     tempCtx.fillStyle = 'black';
     const fontFamily = getComputedStyle(document.documentElement).getPropertyValue('--font-display') || 'Arial';
-    tempCtx.font = `bold 250px ${fontFamily}`;
+    tempCtx.font = `bold ${fontSize}px ${fontFamily}`;
     tempCtx.textAlign = 'center';
     tempCtx.textBaseline = 'middle';
     tempCtx.fillText(hoveredText, width / 2, height / 2);
@@ -271,18 +252,13 @@ const HeroSection = () => {
       }
     }
     
-    // 테두리 픽셀을 일정한 거리 간격으로 샘플링하여 타겟 생성
-    const particleCount = particleCountRef.current || 5000;
-    const targetDistance = 6; // 점 사이의 거리 (픽셀)
-    const sampledTargets = [];
-    
+    // 테두리 픽셀을 거리 순으로 정렬 (연결된 경로 만들기)
+    const sortedPixels = [];
     if (allEdgePixels.length > 0) {
-      // 테두리 픽셀을 거리 순으로 정렬 (연결된 경로 만들기)
-      const sortedPixels = [allEdgePixels[0]];
+      sortedPixels.push(allEdgePixels[0]);
       const remaining = [...allEdgePixels.slice(1)];
       
-      // 가장 가까운 픽셀을 순차적으로 연결
-      while (remaining.length > 0 && sortedPixels.length < allEdgePixels.length) {
+      while (remaining.length > 0) {
         const last = sortedPixels[sortedPixels.length - 1];
         let minDist = Infinity;
         let nearestIdx = 0;
@@ -300,8 +276,23 @@ const HeroSection = () => {
         sortedPixels.push(remaining[nearestIdx]);
         remaining.splice(nearestIdx, 1);
       }
-      
-      // 일정한 거리 간격으로 타겟 생성
+    }
+    
+    // 테두리 총 길이 계산
+    let totalLength = 0;
+    for (let i = 1; i < sortedPixels.length; i++) {
+      const dx = sortedPixels[i].x - sortedPixels[i - 1].x;
+      const dy = sortedPixels[i].y - sortedPixels[i - 1].y;
+      totalLength += Math.sqrt(dx * dx + dy * dy);
+    }
+    
+    // 파티클 수에 맞춰 점 간격 계산 (모든 파티클 사용)
+    // 최소 간격 2px 보장 (너무 촘촘하면 안 됨)
+    const targetDistance = Math.max(2, totalLength / particleCount);
+    
+    // 계산된 간격으로 타겟 생성
+    const sampledTargets = [];
+    if (sortedPixels.length > 0) {
       let accumulatedDistance = 0;
       let lastTarget = sortedPixels[0];
       sampledTargets.push(lastTarget);
@@ -318,28 +309,9 @@ const HeroSection = () => {
           accumulatedDistance = 0;
         }
       }
-      
-      // 파티클 수에 맞춰 타겟 수 조정
-      if (sampledTargets.length < particleCount) {
-        // 타겟이 부족하면 마지막 타겟 반복
-        while (sampledTargets.length < particleCount && sampledTargets.length > 0) {
-          sampledTargets.push(sampledTargets[sampledTargets.length - 1]);
-        }
-      } else if (sampledTargets.length > particleCount) {
-        // 타겟이 많으면 균등하게 샘플링
-        const step = sampledTargets.length / particleCount;
-        const finalTargets = [];
-        for (let i = 0; i < particleCount; i++) {
-          const idx = Math.floor(i * step);
-          finalTargets.push(sampledTargets[idx]);
-        }
-        sampledTargets.length = 0;
-        sampledTargets.push(...finalTargets);
-      }
     }
     
     targetPixelsRef.current = sampledTargets;
-    allEdgePixelsRef.current = allEdgePixels; // 모든 테두리 픽셀 저장
   }, [hoveredText]);
 
   return (
