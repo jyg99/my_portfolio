@@ -3,12 +3,14 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 
-import rockModel from '../assets/rock/xjijbgx_tier_3.gltf?url';
-import sketchTexture from '../assets/rock/Textures/T_xjijbgx_1K_A.png';
+// public 폴더 경로 사용 (GitHub Pages 호환)
+const basePath = import.meta.env.BASE_URL || '/';
+const rockModelPath = `${basePath}rock/xjijbgx_tier_3.gltf`;
+const sketchTexturePath = `${basePath}rock/Textures/T_xjijbgx_1K_A.png`;
 
 // 3D Rock 모델 내부 컴포넌트
 function RockMesh({ activeIndex, prevIndex }) {
-  const { scene } = useGLTF(rockModel);
+  const { scene } = useGLTF(rockModelPath);
   const meshRef = useRef();
   const targetRotation = useRef(0);
   const currentRotation = useRef(0);
@@ -25,7 +27,7 @@ function RockMesh({ activeIndex, prevIndex }) {
   const sketchScene = useMemo(() => {
     const clonedScene = scene.clone();
     const textureLoader = new THREE.TextureLoader();
-    const map = textureLoader.load(sketchTexture);
+    const map = textureLoader.load(sketchTexturePath);
     map.colorSpace = THREE.SRGBColorSpace;
     
     clonedScene.traverse((child) => {
